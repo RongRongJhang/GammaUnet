@@ -62,14 +62,14 @@ class CombinedLoss(nn.Module):
     def __init__(self, device):
         super(CombinedLoss, self).__init__()
         self.perceptual_loss_model = VGGPerceptualLoss(device)
-        self.charbonnier_loss_model = L1CharbonnierLoss(device)
+        self.charbonnier_loss_model = L1CharbonnierLoss()
         self.alpha1 = 1.00
-        self.alpha2 = 0.06
+        self.alpha2 = 0.1
         self.alpha3 = 0.05
-        self.alpha4 = 0.5
-        self.alpha5 = 0.0083
+        self.alpha4 = 1.00
+        self.alpha5 = 0.05
         self.alpha6 = 0.25
-        self.alpha7 = 0.1
+        self.alpha7 = 1.00
 
     def forward(self, y_true, y_pred):
         smooth_l1_l = smooth_l1_loss(y_true, y_pred)
@@ -80,7 +80,7 @@ class CombinedLoss(nn.Module):
         psnr_l = psnr_loss(y_true, y_pred)
         color_l = color_loss(y_true, y_pred)
 
-        total_loss = (self.alpha1 * smooth_l1_l + self.alpha2 * perc_l + 
+        total_loss = (self.alpha2 * perc_l + 
                       self.alpha3 * hist_l + self.alpha5 * psnr_l + 
                       self.alpha6 * color_l + self.alpha4 * ms_ssim_l +
                       self.alpha7 * char_l)
