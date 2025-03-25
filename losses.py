@@ -3,8 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
 from pytorch_msssim import ms_ssim
-# from pytorch_ssim import ssim
-import pytorch_ssim
+from pytorch_ssim import ssim
 import torchvision.transforms as T
 
 class VGGPerceptualLoss(nn.Module):
@@ -42,13 +41,13 @@ def psnr_loss(y_true, y_pred):
     return 40.0 - torch.mean(psnr)
 
 def smooth_l1_loss(y_true, y_pred):
-    return F.smooth_l1_loss(y_true, y_pred, window_size=12)
+    return F.smooth_l1_loss(y_true, y_pred)
 
 def multiscale_ssim_loss(y_true, y_pred, max_val=1.0, power_factors=[0.5, 0.5]):
     return 1.0 - ms_ssim(y_true, y_pred, data_range=max_val, size_average=True)
 
 def ssim_loss(y_true, y_pred):
-    return 1.0 - pytorch_ssim.SSIM(y_true, y_pred)
+    return 1.0 - ssim(y_true, y_pred, window_size=12)
 
 def gaussian_kernel(x, mu, sigma):
     return torch.exp(-0.5 * ((x - mu) / sigma) ** 2)
