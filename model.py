@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
+from einops import rearrange
 
 class MultiHeadSelfAttention(nn.Module):
     def __init__(self, embed_size, num_heads):
@@ -154,7 +155,7 @@ class GammaUnet(nn.Module):
         cr_denoised = self.denoiser_cr(cr)
 
         # 將處理後的三個分支合併
-        combined = torch.cat([y_denoised, cb_denoised, cr_denoised], dim=1)
+        combined = torch.cat([y_denoised, cb_denoised, cr_denoised], dim=1) + ycbcr
 
         # 通過最終的 3x3 卷積層
         output = self.final_conv(combined)
