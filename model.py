@@ -154,7 +154,7 @@ class GammaUnet(nn.Module):
         cb_denoised = self.denoiser_cb(cb)
         cr_denoised = self.denoiser_cr(cr)
 
-        # 將處理後的三個分支合併
+        # 將處理後的三個分支合併，再加上YCbCr
         combined = torch.cat([y_denoised, cb_denoised, cr_denoised], dim=1) + ycbcr
 
         # 通過最終的 3x3 卷積層
