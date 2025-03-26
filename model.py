@@ -134,6 +134,31 @@ class GammaUnet(nn.Module):
         oklab = torch.stack((L, a, b_out), dim=1)
         return oklab
     
+    def _oklab_to_rgb(self, image):
+        # 分離 L, a, b 通道
+        L = image[:, 0:1, :, :]
+        a = image[:, 1:2, :, :]
+        b_in = image[:, 2:3, :, :]
+        
+        # 計算中間值 l_, m_, s_
+        l_ = L + 0.3963377774 * a + 0.2158037573 * b_in
+        m_ = L - 0.1055613458 * a - 0.0638541728 * b_in
+        s_ = L - 0.0894841775 * a - 1.2914855480 * b_in
+        
+        # 將中間值還原 (立方)
+        l = l_.pow(3)
+        m = m_.pow(3)
+        s = s_.pow(3)
+        
+        # 計算回線性 sRGB 各通道
+        r = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s
+        g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s
+        b = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
+        
+        # 合併 r, g, b 三個通道
+        rgb = torch.cat([r, g, b], dim=1)
+        return rgb
+    
     def _gamma_correction(self, image, gamma):
         # 確保輸入在 [0, 1] 範圍內，並添加數值穩定性
         eps = 1e-8  # 避免零值問題
@@ -159,9 +184,12 @@ class GammaUnet(nn.Module):
 
         # 通過最終的 3x3 卷積層
         output = self.final_conv(combined)
+
+        output_rgb = self._oklab_to_rgb(output)
         
         # 確保輸出範圍在 [0, 1]
-        return torch.sigmoid(output)
+        # return torch.sigmoid(output)
+        return output_rgb
 
     def _init_weights(self):
         init.kaiming_uniform_(self.final_conv.weight, a=0, mode='fan_in', nonlinearity='relu')
