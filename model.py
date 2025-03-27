@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
-from einops import rearrange
+# from einops import rearrange
 
 class MultiHeadSelfAttention(nn.Module):
     def __init__(self, embed_size, num_heads):
@@ -96,6 +96,10 @@ class GammaUnet(nn.Module):
         self.denoiser_cb = Denoiser(num_filters)
         self.denoiser_cr = Denoiser(num_filters)
         
+        
+        # self.y_conv = nn.Conv2d(1, 1, kernel_size=3, padding=1)
+        # self.cbcr_conv = nn.Conv2d(2, 2, kernel_size=3, padding=1)
+
         # 最終的 3x3 卷積層
         self.final_conv = nn.Conv2d(3, 3, kernel_size=3, padding=1)
         
@@ -154,11 +158,19 @@ class GammaUnet(nn.Module):
         cb_denoised = self.denoiser_cb(cb)
         cr_denoised = self.denoiser_cr(cr)
 
-        # 將處理後的三個分支合併，再加上YCbCr
-        combined = torch.cat([y_denoised, cb_denoised, cr_denoised], dim=1) + ycbcr
+        # # 將處理後的三個分支合併
+        combined = torch.cat([y_denoised, cb_denoised, cr_denoised], dim=1)
 
-        # 通過最終的 3x3 卷積層
+        # # 通過最終的 3x3 卷積層
         output = self.final_conv(combined)
+
+        # combined = torch.cat([cb_denoised, cr_denoised], dim=1)
+        # y_output = self.y_conv(y_denoised)
+        # cbcr_output = self.cbcr_conv(combined)
+        # ycbcr_output = torch.cat([y_output, cbcr_output], dim=1)
+        # output = self.final_conv(ycbcr_output)
+        # final_output = output + ycbcr
+        # return torch.sigmoid(final_output)
         
         # 確保輸出範圍在 [0, 1]
         return torch.sigmoid(output)
